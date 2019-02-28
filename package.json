@@ -1,0 +1,15 @@
+{
+	"name": "@kawi/core",
+	"description": "The next generation module loader for nodejs",
+	"keywords": [
+		"loader",
+		"transpiler",
+		"module",
+		"next",
+		"ecmascript",
+		"async",
+		"import",
+		"kawi",
+		"kodhe"
+	]
+}

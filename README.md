@@ -4,6 +4,9 @@
 
 **@kawi/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring a lot of dependencies, packagers or build scripts
 
+```bash
+npm install @kawi/core
+``` 
 
 ## Get started 
 
