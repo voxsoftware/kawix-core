@@ -439,7 +439,12 @@ exports.compile= Mod.compile= function(file, options){
 				statc = value
 				if(fromHttp && !options.force){
 					return f(null, statc)
-				}				
+				}
+				else if(fromHttp && options.force){
+					return f(null, {
+						mtime: new Date()
+					})
+				}
 				return fs.stat(file, f)
 			}
 			else if (action == "compare") {
