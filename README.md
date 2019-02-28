@@ -17,13 +17,13 @@ var KModule= Kawi.KModule
 KModule.injectImport()
 
 // this will be async 
-KModule.import("https://github.com/voxsoftware/kawi-core/example/http.js")
+KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js")
 
 ``` 
 
 
 If you run the previous example, you will see and HTTP server example running.
-Look the https://raw.githubusercontent.com/voxsoftware/kawi-core/example/http.js content
+Look the https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js content
 
 ```javascript
 
@@ -52,7 +52,7 @@ Yes, you can import from urls or files, and inside *Kawi required files* you can
 ```javascript
 
 // require a url
-import httpServer from 'https://raw.githubusercontent.com/voxsoftware/kawi-core/example/http-async.js'
+import httpServer from 'https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http-async.js'
 
 // require a file
 import test from './test.js'
