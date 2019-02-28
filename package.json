@@ -1,15 +1,34 @@
 {
-	"name": "@kawi/core",
-	"description": "The next generation module loader for nodejs",
-	"keywords": [
-		"loader",
-		"transpiler",
-		"module",
-		"next",
-		"ecmascript",
-		"async",
-		"import",
-		"kawi",
-		"kodhe"
-	]
+  "name": "@kawix/core",
+  "description": "The next generation module loader for nodejs",
+  "keywords": [
+    "loader",
+    "transpiler",
+    "module",
+    "next",
+    "ecmascript",
+    "async",
+    "import",
+    "kawi",
+    "kodhe"
+  ],
+  "version": "0.0.1",
+  "main": "main.js",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node ./example/example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voxsoftware/kawix-core.git"
+  },
+  "author": "Kodhe <contacto@kodhe.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/voxsoftware/kawix-core/issues"
+  },
+  "homepage": "https://github.com/voxsoftware/kawix-core#readme"
 }

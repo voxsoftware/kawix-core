@@ -1,19 +1,19 @@
-# @kawi/core
+# @kawix/core
 
 ### The next generation module loader for nodejs
 
-**@kawi/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring a lot of dependencies, packagers or build scripts
+**@kawix/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring a lot of dependencies, packagers or build scripts
 
 ```bash
-npm install @kawi/core
+npm install @kawix/core
 ``` 
 
 ## Get started 
 
-Create a main.js file
+Create a *test.js* file
 
 ```javascript
-var Kawi= require("@kawi/core") 
+var Kawi= require("@kawix/core") 
 var KModule= Kawi.KModule
 
 // enable KModule import using `import` syntax
