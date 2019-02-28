@@ -2,7 +2,7 @@
 
 ### The next generation module loader for nodejs
 
-**@kawi/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring with a lot of dependencies, of build scripts
+**@kawi/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring a lot of dependencies, of build scripts
 
 
 ## Get started 
