@@ -22,6 +22,13 @@ KModule.injectImport()
 // this will be async 
 KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js")
 
+// or if you want force ignore cache and always download before import
+/*
+KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js", {
+	"force": true
+})
+*/
+
 ``` 
 
 
