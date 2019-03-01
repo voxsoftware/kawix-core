@@ -43,7 +43,7 @@ exports.import= Mod.import= function(file, options){
 
 	var uri2 , promise, original, filename
 	original= file
-
+	options= options || {}
 
 
 	if(builtinModules.indexOf(file) >= 0){
@@ -100,7 +100,10 @@ exports.import= Mod.import= function(file, options){
 
 		// create a path from parent 
 		if(!this.filename){
-			throw new Error("Cannot resolve file or URL: " + file)
+			// is good get from cwd? 
+			this.filename= options.parent
+			if(!this.filename)
+				throw new Error("Cannot resolve file or URL: " + file)
 		}
 		
 		
@@ -477,7 +480,6 @@ exports.compile= Mod.compile= function(file, options){
 	var json, stat, statc, str, ucached, isjson
 	var promise= new Promise(function(resolv, reject){
 
-
 		var resolve= function(value){
 			if(value){
 				value.time= Date.now() 
@@ -510,8 +512,6 @@ exports.compile= Mod.compile= function(file, options){
 
 			}
 			
-
-
 			else if(action == "cached3"){
 				action = "cached4"
 				return fs.access(cached2, fs.constants.F_OK, f)
@@ -523,11 +523,11 @@ exports.compile= Mod.compile= function(file, options){
 				else{
 					action= "compile"
 				}
-			}
-			
+			}			
 			else if(action == "stat"){
 				if(err)
 					return reject(err)
+
 				
 
 				ucached= Mod._cache[file]
