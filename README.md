@@ -70,3 +70,104 @@ import test from './test.js'
 ``` 
 
 
+## Features 
+
+### 1. Full Ecmascript 2017 (async/await)
+
+```javascript 
+
+let value1= 7 ** 2
+let arr= [10,23,4,NaN]
+
+console.log(value1)
+console.log(arr.includes(4))
+
+let cars= {
+	"BMW": 3,
+	"Tesla": 2,
+	"Toyota": 1
+}
+let values= Object.values(cars)
+console.log(values)
+
+
+for(let [key,value] of Object.entries(cars)){
+	console.log(`key: ${key} value: ${value}`)
+}
+
+
+printInfo(1)
+
+
+function getUser(userId){
+	return new Promise((resolve)=>{
+		setTimeout(resolve.bind(null, 'John'), 1000)
+	})
+}
+
+async function printInfo(userId){
+	let user= await getUser(userId)
+	console.log(user)
+}
+
+```
+
+
+### 2. Typescript support out of the box 
+
+```typescript
+function greeter(person: string) {
+	return "Hello, " + person;
+}
+
+
+function sleep(timeout?: number){
+	timeout= timeout || 0
+	return new Promise(function(resolve, reject){
+		setTimeout(resolve, timeout)
+	})
+}
+
+
+async function foo() {
+    try {
+        var val = greeter("World!");
+		console.log(val);
+		
+		console.log("Simulating async action... please wait 1 second")
+		await sleep(1000)
+		console.log("Finished")
+
+    }
+    catch(err) {
+        console.log('Error: ', err.message);
+    }
+}
+
+foo()
+```
+
+
+### 3. Imports are async, imports from URL
+
+```javascript
+
+import httpServer from './http-async.js'
+
+var server= new httpServer()
+server.listen(8081)
+console.info("Open in browser: 127.0.0.1:8081")
+
+var handle= async function(){
+	var conn
+	while(conn = await server.acceptAsync()){
+		conn.res.write("Hello world! from URL: " + conn.req.url)
+		conn.res.end()
+	}
+	console.info("Http server stopped")
+}
+
+handle()
+
+``` 
+
