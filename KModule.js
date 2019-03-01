@@ -384,6 +384,66 @@ var readHttp= function(url){
 
 
 
+var getCachedFilename= function(uri, options){
+
+	if(!uri.protocol){
+		uri.protocol= "file:"
+		uri.pathname= Path.normalize(uri.pathname)
+	}
+	var name= uri.format().replace(/\:|\?/g, '').replace(/\\/g, '/')
+	if(uri.search){
+		name += uri.search.replace(/\:|\?|\\/g, '')
+	}
+	var parts= name.split("/")
+	parts= parts.filter(function(a){
+		return !!a
+	})
+
+	var full= parts.join(Path.sep)
+	var kawi_dir= Path.join(Os.homedir(), ".kawi")
+	var file_dir= Path.join(kawi_dir, full)
+	var cache_dir= Path.dirname(file_dir)
+
+	return new Promise(function(resolve, reject){
+		var i= 0, part
+		var createTree= function(path){
+			try{
+				if(!path){
+					path= kawi_dir
+				}
+				fs.access(path, fs.constants.F_OK, function(err){
+					if(err){
+						fs.mkdir(path, function(err){
+							if(err) return reject(err)
+							part= parts[i]
+							if(i == parts.length - 1)
+								return resolve(file_dir)
+							i++ 
+							return createTree(Path.join(path, part))
+						})
+					}else{
+						part= parts[i]
+						if(i == parts.length - 1)
+							return resolve(file_dir)
+						i++ 
+						return createTree(Path.join(path, part))
+					}
+				})
+			}catch(e){
+				reject(e)
+			}
+		}
+
+		fs.access(cache_dir, fs.constants.F_OK, function(err){
+			if(err) return createTree()
+			return resolve(file_dir)
+		})
+	})
+	
+
+
+}
+
 /** Transpile moden es2017 code to old javascript */
 exports.compile= Mod.compile= function(file, options){
 
@@ -397,29 +457,16 @@ exports.compile= Mod.compile= function(file, options){
 	var uri= validateFileUrl(file)
 	if(uri.protocol == "file:"){
 		file= Url.fileURLToPath(file)
+		file= Path.normalize(file)
 	}
+
 	var basename= uri.pathname
-	
-
-	var name= file.replace(/\/|\\|\:/g, "$")
-
-
-	if (options.injectImport){
-		name += "$__injected"
-	}
-
-	var transpilerOptions
-	var cached= Path.join(Os.homedir(), ".kawi")
-	var cached1 = Path.join(cached, "compile")
-	var cached2 = Path.join(cached1, name)
-	var fromHttp 
-	if (file.startsWith("http://") || file.startsWith("https://")) {
-		
-		fromHttp= true 
+	var transpilerOptions, cached1, cached2, fromHttp
+	if (uri.protocol && uri.protocol != "file:") {
+		fromHttp= true // remote 
 	}
 
 	var json, stat, statc, str, ucached, isjson
-
 	var promise= new Promise(function(resolv, reject){
 
 
@@ -435,27 +482,28 @@ exports.compile= Mod.compile= function(file, options){
 		var ug = function (err, value) {
 			
 			if(!action){
-				action= 'cached'
-				return fs.access(cached, fs.constants.F_OK, f)
+				
+				action= 'cached3'
+				return getCachedFilename(uri, options).then(function(val){
+					cached2= val 
+					cached1= Path.dirname(val)
+					return f()
+				}).catch(reject)
+
 			}
+
 			else if(action == "cached"){
-				action = "cached1"
+				
+				action = "cached3"
 				if (err) {					
 					fs.mkdir(cached, f)
 				}
 				return f()
+
 			}
-			else if(action== "cached1"){
-				action = "cached2"
-				return fs.access(cached1, fs.constants.F_OK, f)
-			}
-			else if (action == "cached2") {
-				action = "cached3"
-				if (err) {
-					fs.mkdir(cached1, f)
-				}
-				return f()
-			}
+			
+
+
 			else if(action == "cached3"){
 				action = "cached4"
 				return fs.access(cached2, fs.constants.F_OK, f)
