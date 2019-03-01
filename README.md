@@ -152,7 +152,7 @@ foo()
 
 ```javascript
 
-import httpServer from './http-async.js'
+import httpServer from 'https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http-async.js'
 
 var server= new httpServer()
 server.listen(8081)
