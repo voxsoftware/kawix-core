@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var file= process.argv[2]
 if(file && !file.startsWith("--")){
 

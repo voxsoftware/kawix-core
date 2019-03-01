@@ -4,13 +4,29 @@
 
 **@kawix/core** allows requiring modules in async and more elegant way, and use last features of EcmaScript (for example async/await) without requiring a lot of dependencies, packagers or build scripts
 
-```bash
-npm install @kawix/core
-``` 
+
 
 ## Get started 
 
-Create a *test.js* file
+**Option 1**. Install global and execute example directly from terminal
+
+```bash
+> npm install -g @kawix/core
+> kwcore "https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js"
+``` 
+
+**Option 2**. Install local and execute example from node_modules/.bin
+
+```bash
+> npm install @kawix/core
+> node_modules/.bin/kwcore "https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js"
+``` 
+
+**Option 3**. Create a *test.js* file
+
+```bash
+> npm install @kawix/core
+``` 
 
 ```javascript
 var Kawi= require("@kawix/core") 

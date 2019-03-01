@@ -12,11 +12,14 @@
     "kawi",
     "kodhe"
   ],
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "main.js",
   "directories": {
     "example": "example",
     "test": "test"
+  },
+  "bin":{
+    "kwcore": "./bin/cli.js"
   },
   "scripts": {
     "test": "node ./example/example"
