@@ -15,7 +15,8 @@ var Mod= exports.Module= function(){
 
 Mod._cache = {}
 Mod._cacherequire = {}
-Mod.cachetime= 10000
+Mod._cacheresolve= {}
+Mod.cachetime= 5000
 
 Module._originalResolveFilename = Module._resolveFilename
 Module._resolveFilename= function(name){
@@ -51,8 +52,42 @@ exports.import= Mod.import= function(file, options){
 
 
 	var uri = validateFileUrl(file)
+	filename = this.filename || "current"
+
+
+
+	var getBetter= function(){
+		
+		promise = new Promise(function (resolve, reject) {
+			var ids = Object.keys(Mod.extensions)
+			var i = -1
+			var f = function (file, ext) {
+				var cfile = file
+				if (ext) {
+					cfile = file + ext
+				}
+
+				fs.access(cfile, fs.constants.F_OK, function (err) {
+					if (err) {
+						// test next
+						i++
+						ext = ids[i]
+						if (!ext)
+							return reject(new Error("Cannot resolve " + original + " from " + filename))
+
+						return f(file, ext)
+					}
+
+					return resolve(Mod.require(cfile, options))
+				})
+			}
+			f(file)
+		})
+		return promise
+	}
+
 	if(uri.protocol || Path.isAbsolute(file)){
-		return Mod.require(file,options)
+		return getBetter()
 	}
 	else{
 
@@ -76,32 +111,7 @@ exports.import= Mod.import= function(file, options){
 
 				// find this or with extensions
 				file= Path.join(Path.dirname(this.filename), file)
-				filename= this.filename 
-				promise= new Promise(function(resolve,reject){					
-					var ids= Object.keys(Mod.extensions)
-					var i= -1
-					var f= function(file, ext){
-						var cfile= file
-						if(ext){
-							cfile= file + ext
-						}
-
-						fs.access(cfile, fs.constants.F_OK, function(err){
-							if(err){
-								// test next
-								i++ 
-								ext= ids[i]
-								if(!ext)
-									return reject(new Error("Cannot resolve " + original + " from " + filename))
-								
-								return f(file, ext)									
-							}
-							return resolve(Mod.require(cfile, options))
-						})
-					}
-					f(file)
-				})
-				return promise
+				return getBetter()
 			}
 			
 
@@ -155,7 +165,7 @@ var changeSource= function(source){
 		return a.replace(b+c+d, "'"+ unq + "." + cid + ".js'")
 	})
 
-	if(imports.mods){
+	if(imports.mods && imports.mods.length){
 		var morecode= ['var ___kawi__async= async function(KModule){']
 		for(var i=0;i<imports.mods.length;i++){
 			mod= imports.mods[i]
@@ -167,6 +177,10 @@ var changeSource= function(source){
 		morecode.push("}")
 		imports.inject= morecode.join("\n")
 		imports.source= source + "\n" + imports.inject 
+	}
+	else{
+		imports.source= source
+		//console.info("Source: ", source)
 	}
 	return imports 
 }
@@ -183,11 +197,12 @@ var loadInjectImportFunc= function(ast){
 			code= ast.code.substring(0,i)
 			injectCode= ast.code.substring(i+20)
 			ast.code = code 
-			ast.injectCode= injectCode 
+			ast.injectCode= injectCode.trim()
 		}
 	}
 
 	if(ast.injectCode && !ast.inject){
+		//console.info(ast.code)
 		ucode= "(function(){" + asynchelper + "\n\nreturn" + ast.injectCode + "\n})()"
 		ast.inject= eval(ucode)
 	}
@@ -206,9 +221,10 @@ exports.removeCached= Mod.removeCached= function(file){
 				delete Module._cache[cached.__kawi_uid[i]]
 			}
 		}
-		delete Module._cache[file]
+		delete Module._cache[file]		
 		delete Mod._cacherequire[file]
 	}
+	delete Mod._cache[file]
 }
 
 
@@ -217,70 +233,102 @@ exports.removeCached= Mod.removeCached= function(file){
 exports.require= Mod.require= function(file, options){
 	options=options || {}
 	var cached = Mod._cacherequire[file]
-	if(cached){
-		Module._cache[file] = cached
-		if (options.uid)
-			cached.__kawi_uid[options.uid] = true
+	
+	var promise, promise2 , generate, module
 
-		Module._cache[options.uid || "_internal_kawi_last.js"] = cached
-		return cached.exports
+
+	var generate= function(ast, resolve, reject){
+		module = new Module(file)
+		module.exports = {}
+
+		var nmod = {}
+		nmod.require = Mod.require
+		nmod.import = Mod.import
+		nmod.extensions = Mod.extensions
+		nmod.removeCached = Mod.removeCached
+		nmod.filename = file
+		module.KModule = nmod
+		module.__kawi_time= Date.now()
+
+
+		var continue1 = function () {
+
+			//console.info("exports.__kawi= function(KModule){" + ast.code + "}")
+			module._compile("exports.__kawi= function(KModule){" + ast.code + "\n}", file)
+
+			// custom mod for each file 
+			Module._cache[file] = module
+			Mod._cacherequire[file] = module
+			module.__kawi_uid = {}
+			if (options.uid)
+				module.__kawi_uid[options.uid] = true
+
+
+			var maybePromise = module.exports.__kawi(nmod)
+			Module._cache[options.uid || "_internal_kawi_last.js"] = module
+			return resolve(module.exports)
+
+		}
+		if (ast.injectCode && !ast.inject) {
+			// inject the code 
+			loadInjectImportFunc(ast)
+		}
+
+		if (ast.inject) {
+			ast.inject(nmod).then(function () {
+				continue1()
+			}).catch(reject)
+		} else {
+			continue1()
+		}
+	}
+
+	if(cached){
+		var returnData= function(){
+			Module._cache[file] = cached
+			if (options.uid)
+				cached.__kawi_uid[options.uid] = true
+
+			Module._cache[options.uid || "_internal_kawi_last.js"] = cached
+			return cached.exports
+		}
+
+
+		if (cached.exports.kawixDynamic && ((Date.now() - cached.__kawi_time) >
+			(cached.exports.kawixDynamic.time || Mod.cachetime))){
+
+			// exported as dynamicMethod 
+			// get if changed ...
+			options.ignoreonunchanged= true 
+			promise = Mod.compile(file, options)
+			promise2 = new Promise(function (resolve, reject) {
+				promise.then(function(ast){
+					if(!ast){
+						return resolve(returnData()) 
+					}else{
+						Mod.removeCached(file)
+						return generate(ast, function(){
+							// this allow hot reloading modules 
+							if(typeof module.exports.kawixDynamic.reload == "function"){
+								return resolve(module.exports.kawixDynamic.reload(cached.exports, module.exports))
+							}
+							return resolve(module.exports)
+						}, reject)
+					}
+				})
+			})
+			return promise2
+		}else{
+			return returnData()
+		}	
+
 	}
 
 
-	var promise= Mod.compile(file,options)
-	var promise2= new Promise(function(resolve, reject){
+	promise= Mod.compile(file,options)
+	promise2= new Promise(function(resolve, reject){
 		promise.then(function(ast){
-
-			var module = new Module(file)
-			module.exports = {}
-
-			var nmod = {}
-			nmod.require = Mod.require
-			nmod.import = Mod.import
-			nmod.extensions = Mod.extensions
-			nmod.removeCached = Mod.removeCached
-			nmod.filename = file 
-			module.KModule = nmod 
-
-
-			var continue1= function(){
-				module._compile("exports.__kawi= function(KModule){"+ ast.code  + "}", file)
-
-				// custom mod for each file 
-				
-				
-				Module._cache[file] = module
-				Mod._cacherequire[file] = module
-				module.__kawi_uid= {}
-				if(options.uid)
-					module.__kawi_uid[options.uid]= true
-
-				var maybePromise= module.exports.__kawi(nmod)
-				/*
-				if(maybePromise && maybePromise.then){
-					maybePromise.then(function(){
-						Module._cache[options.uid || "_internal_kawi_last.js"] = module
-						return resolve(module.exports)
-					}).catch(reject)
-				}else{*/
-				Module._cache[options.uid || "_internal_kawi_last.js"] = module
-				return resolve(module.exports)
-				//}
-			}
-			if(ast.injectCode && !ast.inject){
-				// inject the code 
-				loadInjectImportFunc(ast)
-			}
-			
-			if(ast.inject){
-
-				ast.inject(nmod).then(function () {
-					continue1()
-				}).catch(reject)
-
-			}else{
-				continue1()
-			}
+			return generate(ast,resolve,reject)			
 		}).catch(reject)
 	})
 
@@ -350,6 +398,7 @@ exports.compile= Mod.compile= function(file, options){
 	if(uri.protocol == "file:"){
 		file= Url.fileURLToPath(file)
 	}
+	var basename= uri.pathname
 	
 
 	var name= file.replace(/\/|\\|\:/g, "$")
@@ -359,7 +408,7 @@ exports.compile= Mod.compile= function(file, options){
 		name += "$__injected"
 	}
 
-
+	var transpilerOptions
 	var cached= Path.join(Os.homedir(), ".kawi")
 	var cached1 = Path.join(cached, "compile")
 	var cached2 = Path.join(cached1, name)
@@ -375,8 +424,10 @@ exports.compile= Mod.compile= function(file, options){
 
 
 		var resolve= function(value){
-			value.time= Date.now() 
-			Mod._cache[file]= value 
+			if(value){
+				value.time= Date.now() 
+				Mod._cache[file]= value 
+			}
 			return resolv(value)
 		}
 		var action= ''
@@ -425,6 +476,8 @@ exports.compile= Mod.compile= function(file, options){
 
 				ucached= Mod._cache[file]
 				if(ucached &&  (Date.now() - ucached.time <= Mod.cachetime)){
+					if(options.ignoreonunchanged)
+						return resolv(null)
 					return resolv(ucached)
 				}
 
@@ -460,6 +513,9 @@ exports.compile= Mod.compile= function(file, options){
 					return f()
 				}
 				else{
+
+					if(options.ignoreonunchanged)
+						return resolve(null)
 
 					
 					// good, return the cached
@@ -523,11 +579,21 @@ exports.compile= Mod.compile= function(file, options){
 				}
 				else{
 					if (options.injectImport){
-						imports= changeSource(value)
-						
+						imports= changeSource(value)	
 						value= imports.source 
 					}
-					json= Next.transpile(value)
+					transpilerOptions = {
+						presets: ['es2015', 'es2016', 'es2017'],
+						sourceMaps: true,
+						comments: true,
+						filename: file
+					}
+
+					if(basename.endsWith(".ts")){
+						transpilerOptions.presets= ["typescript"]
+					}
+
+					json= Next.transpile(value, transpilerOptions)
 					delete json.options
 					if(options.injectImport){					
 						loadInjectImportFunc(json)
