@@ -87,6 +87,13 @@ exports.import= Mod.import= function(file, options){
 	}
 
 	if(uri.protocol || Path.isAbsolute(file)){
+		if(uri.protocol != "file:"){
+			return Mod.require(file, options)
+		}
+		else{
+			file= Url.fileURLToPath(file)
+			file= Path.normalize(file)
+		}
 		return getBetter()
 	}
 	else{
@@ -198,12 +205,13 @@ var loadInjectImportFunc= function(ast){
 			injectCode= ast.code.substring(i+20)
 			ast.code = code 
 			ast.injectCode= injectCode.trim()
+			i= ast.injectCode.indexOf("function")
+			ast.injectCode= ast.injectCode.substring(i)
 		}
 	}
 
-	if(ast.injectCode && !ast.inject){
-		//console.info(ast.code)
-		ucode= "(function(){" + asynchelper + "\n\nreturn" + ast.injectCode + "\n})()"
+	if(ast.injectCode && !ast.inject){		
+		ucode= "(function(){" + asynchelper + "\n\nreturn " + ast.injectCode + ";\n})()"		
 		ast.inject= eval(ucode)
 	}
 
