@@ -72,7 +72,11 @@ import test from './test.js'
 
 ## Features 
 
+All this examples can be imported with KModule, like *Get Started* example
+
 ### 1. Full Ecmascript 2017 (async/await)
+
+Create an .es6 or .js with following content and import with KModule
 
 ```javascript 
 
@@ -115,6 +119,8 @@ async function printInfo(userId){
 
 ### 2. Typescript support out of the box 
 
+Create an .ts with following content and import with KModule
+
 ```typescript
 function greeter(person: string) {
 	return "Hello, " + person;
@@ -149,6 +155,8 @@ foo()
 
 
 ### 3. Imports are async, imports from URL
+
+Create an .es6 or .js with following content and import with KModule
 
 ```javascript
 
