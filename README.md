@@ -195,3 +195,56 @@ handle()
 
 ``` 
 
+**IMPORTANT:** 
+
+1. *@kawix/core* don't resolve dependencies like node.js. For example, this code *import xx from 'request'* will fallback to *node.js* internal resolve method requiring package *request*. The idea of *@kawix/core* is be simplier, and inspired in *deno* allow imports from absolute, relative and URL paths. Also, like *@kawix/core* don't resolve dependencies like node.js, you cannot expect that importer search *package.json* or *index.js* if you import a folder. You should specify imports to files no folders 
+
+
+2. *@kawix/core* execute imports before all other code. This means, that you should not call any function or make any operations between imports
+
+Think in this code: 
+
+```javascript 
+// is native method, is untouched
+import fs from 'fs' 
+// is processed by kawix
+import http from 'https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js' 
+// this is BAD, not recommended
+makeAnyOperation() 
+
+import other from './other.js'
+
+export default function(){
+	// any operation
+	return action()
+}
+```
+
+Will be translated to something like this (before transpiling): 
+
+```javascript 
+import fs from 'fs'
+import http from 'cached_result_on_1'
+
+makeAnyOperation()
+
+import other from 'cached_result_on_2'
+
+
+export default function(){
+	// any operation
+	return action()
+}
+
+// THIS will be executed before all file code 
+var __kawi_async= async function(){
+	await KModule.import('https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js', {
+		// this ensure create a cache for be usable later with import
+		uid: 'cached_result_on_1' 
+	})
+	await KModule.import('./other.js', {
+		// this ensure create a cache for be usable later with import
+		uid: 'cached_result_on_1' 
+	})
+}
+``` 
