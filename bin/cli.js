@@ -1,16 +1,26 @@
 #!/usr/bin/env node
-var args= [].concat(process.argv.slice(2))
+
 var arg
 var Kawix= require("../main")
-
-
-while(arg = args.shift()){
+var offset= 0
+var args= [].concat(process.argv)
+for(var i=2;i<args.length;i++){
+    arg= args[i]
+    if(!arg)
+        break 
+        
     if(arg == "--reload" || arg == "--force"){
+        process.argv.splice(offset + i,1)
+        offset--
         Kawix.KModule.defaultOptions= {
             force: true
         }
     }
-    else if(!arg.startsWith("--")){
+    else if(arg.startsWith("--")){
+        process.argv.splice(offset + i,1)
+        offset--
+    }
+    else{
         
         // require file using KModule
         Kawix.KModule.injectImport()
@@ -19,6 +29,7 @@ while(arg = args.shift()){
         }).then(function(){}).catch(function(e){
             console.error("Failed executing: ", e)
         })
+        break 
     }
 }
 
