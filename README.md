@@ -11,21 +11,21 @@
 **Option 1**. Install global and execute example directly from terminal
 
 ```bash
-> npm install -g @kawix/core
+> npm install -g @kawix/core@latest
 > kwcore "https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js"
 ``` 
 
 **Option 2**. Install local and execute example from node_modules/.bin
 
 ```bash
-> npm install @kawix/core
+> npm install @kawix/core@latest
 > node_modules/.bin/kwcore "https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js"
 ``` 
 
 **Option 3**. Create a *test.js* file
 
 ```bash
-> npm install @kawix/core
+> npm install @kawix/core@latest
 ``` 
 
 ```javascript
@@ -272,7 +272,8 @@ console.log("Listening on 3000")
 Test yourself from your terminal
 
 ```bash
-> npm -i @kawix/core
+> npm install -g @kawix/core@latest
+
 > kwcore "https://raw.githubusercontent.com/voxsoftware/kawix-core/master/example/npmrequire/express.js"
 
 # take care that this project is in active development, if fails use --force for invalidate cache
@@ -296,7 +297,7 @@ Test yourself from your terminal
 
 **When not use dynamic loading?**
 
-1. Just now, only with native bindings module, because currently **@kawix/core** doesn't have ability to compile. But will be available using *npm* package for install other packages
+1. Just now, only with native bindings module, because currently **@kawix/core** doesn't have ability to compile. But will be available using *npm* package for this purpose
 
 **Is secure hot loading?**
 
@@ -312,6 +313,8 @@ Maybe you think that this is not good or practical, because can give version inc
 ## Do you want contribute? 
 
 You can contribute testing the code and report issues: [https://github.com/voxsoftware/kawix-core/issues](https://github.com/voxsoftware/kawix-core/issues)
+
+Do you think that can write better some parts of this README? Feel free to check and contribute
 
 Do you have any idea that can be great for this project? 
 
