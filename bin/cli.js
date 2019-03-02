@@ -1,14 +1,24 @@
 #!/usr/bin/env node
-var file= process.argv[2]
-if(file && !file.startsWith("--")){
+var args= [].concat(process.argv.slice(2))
+var arg
+var Kawix= require("../main")
 
-    // require file using KModule
-    var Kawix= require("../main")
-    Kawix.KModule.injectImport()
-    Kawix.KModule.import(file,{
-        parent: process.cwd() + "/cli.js"
-    }).then(function(){}).catch(function(e){
-        console.error("Failed executing: ", e)
-    })
 
+while(arg = args.shift()){
+    if(arg == "--reload" || arg == "--force"){
+        Kawix.KModule.defaultOptions= {
+            force: true
+        }
+    }
+    else if(!arg.startsWith("--")){
+        
+        // require file using KModule
+        Kawix.KModule.injectImport()
+        Kawix.KModule.import(arg,{
+            parent: process.cwd() + "/cli.js"
+        }).then(function(){}).catch(function(e){
+            console.error("Failed executing: ", e)
+        })
+    }
 }
+
