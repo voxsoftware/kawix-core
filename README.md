@@ -197,7 +197,7 @@ handle()
 
 **IMPORTANT:** 
 
-1. *@kawix/core* don't resolve dependencies like node.js. For example, this code *import xx from 'request'* will fallback to *node.js* internal resolve method requiring package *request*. The idea of *@kawix/core* is be simplier, and inspired in *deno* allow imports from absolute, relative and URL paths. Also, like *@kawix/core* don't resolve dependencies like node.js, you cannot expect that importer search *package.json* or *index.js* if you import a folder. You should specify imports to files no folders 
+1. *@kawix/core* doesn't resolve dependencies like node.js. For example, this code *import xx from 'request'* will fallback to *node.js* internal resolve method requiring package *request*. The idea of *@kawix/core* is be simplier, and inspired in *deno* allow imports from absolute, relative and URL paths. Also, like *@kawix/core* doesn't resolve dependencies like node.js, you cannot expect that importer search *package.json* or *index.js* if you import a folder. You should specify imports to files no folders 
 
 
 2. *@kawix/core* execute imports before all other code. This means, that you should not call any function or make any operations between imports
