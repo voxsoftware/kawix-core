@@ -6,8 +6,9 @@
 import express from 'npm://express@^4.16.4'
 import Path from 'path'
 
-var folder= process.argv[2] || "."
+var folder= process.argv[3] || "."
 folder= Path.resolve(process.cwd(), folder)
+console.log("Using folder as public: " + folder)
 
 var app = express() 
 app.use(express.static(folder)) 
