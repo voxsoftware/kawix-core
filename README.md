@@ -248,3 +248,75 @@ var __kawi_async= async function(){
 	})
 }
 ``` 
+
+
+### 4. Imports npm packages (dinamycally)
+
+Consider the following example
+
+```javascript
+
+// this will download the npm module with dependencies, and make a local cache
+import express from 'npm://express@^4.16.4'
+
+
+var app = express() 
+app.get('/', function (req, res) {
+  res.send('Hello World')
+}) 
+app.listen(3000)
+console.log("Listening on 3000")
+
+``` 
+
+Test yourself from your terminal
+
+```bash
+> npm -i @kawix/core
+> kwcore "https://raw.githubusercontent.com/voxsoftware/kawix-core/master/example/npmrequire/express.js"
+
+# take care that this project is in active development, if fails use --force for invalidate cache
+> kwcore --force "https://raw.githubusercontent.com/voxsoftware/kawix-core/master/example/npmrequire/express.js"
+```
+
+**Use cases for dynamic loading?**
+1. When you need/want decrease or have zero *installation/update* effort (for example in a web service balanced on multiple servers)
+
+2. When you are testing development 
+
+3. When you sell scripts to your clients *no developers* that have not idea how move mouse :v 
+
+4. When you want decreases memory, and you want multiple secure apps sharing process/cluster
+
+5. When you want portability 
+
+6. For little tools that you can make for your projects
+
+7. For fun :) 
+
+**When not use dynamic loading?**
+
+1. Just now, only with native bindings module, because currently **@kawix/core** doesn't have ability to compile. But will be available using *npm* package for install other packages
+
+**Is secure hot loading?**
+
+Maybe you think that this is not good or practical, because can give version inconsistency. Ok, that's not true, because each module version is respected. 
+
+1. This means if you require module *A* that depends on *B* version 1 and on module *C*, that depends on *B* version 2, each version will be downloaded, and each module will use the version for which was made
+
+2. If you require module *A* version 1, and later in same process require module *A* version 2, each module version will be cached in different folder, avoiding file inconsistency cross versions
+
+3. If you require module *A* that depends on module *B* version 1, and later in your code you require module *B* version 1, will be resolved to the same module *B* path, installed for *A*, avoiding so much duplicates, but if you request a different version, will be downloaded and cached on different folder
+
+
+## Do you want contribute? 
+
+You can contribute testing the code and report issues: [https://github.com/voxsoftware/kawix-core/issues](https://github.com/voxsoftware/kawix-core/issues)
+
+Do you have any idea that can be great for this project? 
+
+If you are a developer with time, can contribute adding functionality or fixing some bugs that can appears
+
+If you cannot contribute in last two ways, why not donate? Contact us: contacto@kodhe.com
+
+Do you want appears on README section like a continous financial collaborator, contact us for patronate this project with monthly donations
