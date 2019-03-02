@@ -8,7 +8,7 @@ for(var i=2;i<args.length;i++){
     arg= args[i]
     if(!arg)
         break 
-        
+
     if(arg == "--reload" || arg == "--force"){
         process.argv.splice(offset + i,1)
         offset--
