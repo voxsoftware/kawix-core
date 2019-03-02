@@ -24,7 +24,14 @@ Next.prototype.transpile= function(source, options){
 	var result= Babel.transform(source, options)
 	if(result.code){
 		result.code += transpiledLine
+		if(result.code.trim().startsWith("#!")){
+			// remove that line
+			result.code= result.code.split(/\r\n|\r|\n/g)
+			result.code.shift()
+			result.code= result.code.join("\n")
+		}
 	}
+	
 	return result
 
 }
