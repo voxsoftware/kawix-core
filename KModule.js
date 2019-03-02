@@ -17,6 +17,7 @@ Mod._cache = {}
 Mod._cacherequire = {}
 Mod._cacheresolve= {}
 Mod._virtualfile= {}
+Mod._npmcache= {}
 Mod.cachetime= 5000
 
 var createDefault=function(options){
@@ -48,13 +49,13 @@ var getKModule= function(filename){
 
 
 var _getCachedFilename= function(uri, options){
-
+	options= options || {}
 	if(!uri.protocol){
 		uri.protocol= "file:"
 		uri.pathname= Path.normalize(uri.pathname)
 	}
 
-	var name= uri.format().replace(/\:|\?/g, '').replace(/\\/g, '/')
+	var name= (options.mask || uri.format()).replace(/\:|\?/g, '').replace(/\\/g, '/')
 	if(uri.search){
 		name += uri.search.replace(/\:|\?|\\/g, '')
 	}
@@ -309,7 +310,7 @@ Mod.resolveVirtual= function(name, parent){
 var validateFileUrl= function(file){
 	var uri = Url.parse(file)
 	if (uri.protocol) {
-		if (uri.protocol != "http:" && uri.protocol != "https:" && uri.protocol != "file:") {
+		if (uri.protocol != "http:"  && uri.protocol != "npm:" && uri.protocol != "npmi:" && uri.protocol != "https:" && uri.protocol != "file:") {
 			throw new Error("Protocol " + uri.protocol + " not supported")
 		}
 	}
@@ -468,6 +469,9 @@ exports.import= Mod.import= function(file, options){
 
 
 	var uri = validateFileUrl(file)
+	
+
+
 	filename = this.filename || "current"
 
 
@@ -678,15 +682,29 @@ exports.addVirtualFile= Mod.addVirtualFile= function(file, data){
 
 
 
+var getMask= function(url, value){
+	if(value.mask){
+		return value.mask 
+	}
+	var name= Path.basename(value.redirect)
+	if(url.endsWith(value)){
+		return url 
+	}
+	else{
+		return url + "/" + name
+	}
+}
 
 /** require a module (file or url) */
 exports.require= Mod.require= function(file, options){
 	options=options || {}
+	
+	
 	var cached = Mod._cacherequire[file]
 	
 	var promise, promise2 , generate, module
 
-
+	
 	var generate= function(ast, resolve, reject){
 		module = new Module(file)
 		module.exports = {}
@@ -759,11 +777,20 @@ exports.require= Mod.require= function(file, options){
 			// get if changed ...
 			options.ignoreonunchanged= true 
 			promise = Mod.compile(file, options)
+			
 			promise2 = new Promise(function (resolve, reject) {
 				promise.then(function(ast){
+					
 					if(!ast){
 						return resolve(returnData()) 
 					}else{
+					
+						if(ast.redirect){
+							options.mask= getMask(file, ast)
+							return resolve(require(ast.redirect, options))
+						}
+
+
 						Mod.removeCached(file)
 						return generate(ast, function(){
 							// this allow hot reloading modules 
@@ -786,6 +813,10 @@ exports.require= Mod.require= function(file, options){
 	promise= Mod.compile(file,options)
 	promise2= new Promise(function(resolve, reject){
 		promise.then(function(ast){
+			if(ast && ast.redirect){
+				options.mask= getMask(file, ast)
+				return resolve(Mod.require(ast.redirect,options))
+			}
 			return generate(ast,resolve,reject)			
 		}).catch(reject)
 	})
@@ -794,6 +825,80 @@ exports.require= Mod.require= function(file, options){
 
 }
 
+
+
+var readNpm= function(url){
+
+	//var uri= Url.parse(url)
+	
+	var module= url.substring(url.indexOf("://") + 3)
+	
+	var parts= module.split("/")
+	var oparts= [].concat(parts)
+	var subpath= ""
+
+	while(parts.length > 2){
+		parts.pop()
+	}
+	if(parts.length > 1){
+		if(parts[0].startsWith("@")){
+			// valid 
+		}
+		else{
+			parts.pop()
+		}
+	}
+	subpath= oparts.slice(parts.length)
+	subpath= subpath.join("/")
+	module= parts.join("/")
+	var moduledesc= Mod._npmcache[module]
+	var continue3= function(moduledesc){
+		
+		if(moduledesc){
+
+			Mod._npmcache[module]= moduledesc
+			// return 
+			if(subpath){
+				return {
+					redirect: Path.join(moduledesc.folder, subpath),
+					mask: "npm://" + moduledesc.name + "$v$" + moduledesc.version + "/" + subpath 
+				}
+			}else{
+				return {
+					redirect: moduledesc.main ,
+					mask: "npm://" + moduledesc.name + "$v$" + moduledesc.version + "/" + (Path.relative(moduledesc.folder,moduledesc.main))
+				}
+			}
+		}
+	}
+
+	if(moduledesc){
+		return continue3(moduledesc)
+	}
+
+
+	
+
+	return new Promise(function(resolve,reject){
+		var continue2= function(moduledesc){
+			return resolve(continue3(moduledesc))
+		}
+		var continue1= function(){
+			if (!process.env.DISABLE_COMPILATION_INFO) {
+				console.info("Caching npm module: " + url + " ...")
+			}
+			Mod._npmImport.resolve(module).then(continue2).catch(reject)
+		}
+
+		if(!Mod._npmImport){
+			Mod.import(Path.join(__dirname,"src","npm-import")).then(function(loader){
+				Mod._npmImport= loader 
+				continue1()
+			}).catch(reject)
+		}
+	})
+	
+}
 
 var readHttp= function(url){
 	var xhttp= url.startsWith("http://") ? "http" : "https"
@@ -868,6 +973,17 @@ exports.compile= Mod.compile= function(file, options){
 	}
 
 	var json, stat, statc, str, ucached, isjson, virtualFileCache
+
+	var readRemote= function(){
+		if(uri.protocol == "http:" || uri.protocol== "https:"){
+			return readHttp.apply(this, arguments)
+		}else if(uri.protocol == "npm:"){
+			return readNpm.apply(this, arguments)
+		}
+		else if(uri.protocol == "npmi:"){
+			throw new Error("Not implemented")
+		}
+	}
 
 	var getstat= function(file, callback){
 		if(Mod._virtualfile[file]){
@@ -952,7 +1068,19 @@ exports.compile= Mod.compile= function(file, options){
 				if(err)
 					return reject(err)
 
-				
+				if(uri.protocol && uri.protocol.startsWith("npm")){
+					action= "transpile"
+					value=  readRemote(file)
+					if(value.then){
+						
+						return value.then(function (value) {
+							return f(null, value)
+						}).catch(reject)
+					}
+					else{
+						return f(null, value)
+					}
+				}
 
 				ucached= Mod._cache[file]
 				if(ucached &&  (Date.now() - ucached.time <= Mod.cachetime)){
@@ -1025,15 +1153,22 @@ exports.compile= Mod.compile= function(file, options){
 					
 					if(fromHttp){
 						if (!process.env.DISABLE_COMPILATION_INFO) {
-							console.info("Downloading: " + file + " ...")
+							if(!file.startsWith("npm"))
+								console.info("Downloading: " + file + " ...")
 						}
 						
-						return readHttp(file).then(function (value) {
+						value=  readRemote(file)
+						if(value.then){
+							
+							return value.then(function (value) {
+								return f(null, value)
+							}).catch(reject)
+						}
+						else{
 							return f(null, value)
-						}).catch(reject)
+						}
 					}
 					return readfile(file, f)
-
 				}
 			}
 			else if (action == "transpile") {
@@ -1041,10 +1176,16 @@ exports.compile= Mod.compile= function(file, options){
 					return reject(err)
 				}
 				if(!process.env.DISABLE_COMPILATION_INFO){
-					console.info("Compiling file: " + file)
+					if(!file.startsWith("npm"))
+						console.info("Compiling file: " + file)
 				}
-
-				if(value.type){
+				
+				if(value.redirect){
+					
+					// forget this and compile other URL
+					return resolve(value)
+				}
+				else if(value.type){
 					
 					isjson= value.type.startsWith("application/json")
 					value= value.code 
@@ -1070,7 +1211,11 @@ exports.compile= Mod.compile= function(file, options){
 						}
 					}
 
-					if (options.injectImport && (!json || json.transpile !== false)){
+					if(json && json.transpile === false){
+						options.transpile= false
+					}
+
+					if (options.injectImport && (options.transpile !== false)){
 						imports= changeSource(value)	
 						value= imports.source 
 					}
@@ -1092,7 +1237,7 @@ exports.compile= Mod.compile= function(file, options){
 						}
 					}
 
-					if(!json || json.transpile !== false){
+					if(options.transpile !== false){
 						json= Next.transpile(value, transpilerOptions)
 						delete json.options
 						if(options.injectImport){					
