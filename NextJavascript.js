@@ -1,7 +1,7 @@
 var Babel
 var runtime= global.regeneratorRuntime= require("./runtime")
 
-var transpiledLine = "\n// kawi converted. Preserve this line, Kawi transpiler will not reprocess if this line found"
+var transpiledLine = exports.transpiledLineComment= "\n// kawi converted. Preserve this line, Kawi transpiler will not reprocess if this line found"
 var Next= exports.default= function(){}
 Next.prototype.transpile= function(source, options){
 

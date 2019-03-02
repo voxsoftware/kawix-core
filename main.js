@@ -2,6 +2,7 @@
 require("./Promise")
 exports.Promise= global.Promise 
 
+global.kwcore= global.kawix= module.exports 
 
 var op={}
 
