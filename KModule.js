@@ -19,6 +19,16 @@ Mod._cacheresolve= {}
 Mod._virtualfile= {}
 Mod.cachetime= 5000
 
+var createDefault=function(options){
+	var defoptions= Mod.defaultOptions || exports.defaultOptions
+	options= options || {}
+	for(var id in defoptions){
+		if(options[id] === undefined)
+			options[id]= defoptions[id]
+	}
+	return options
+}
+
 Module._originalResolveFilename = Module._resolveFilename
 
 
@@ -441,12 +451,15 @@ Mod.compileSync= function(file, options){
 }
 
 
+
+
+
 /** resolve a file in current module, and require */
 exports.import= Mod.import= function(file, options){
 
 	var uri2 , promise, original, filename
 	original= file
-	options= options || {}
+	options= createDefault(options)
 
 
 	if(builtinModules.indexOf(file) >= 0){
@@ -835,7 +848,8 @@ var readHttp= function(url){
 exports.compile= Mod.compile= function(file, options){
 
 	var source= ''
-	options= options || {}
+	
+	options= createDefault(options)
 	source= options.source
 	if(options.injectImport === undefined){
 		options.injectImport= Mod.__injected
