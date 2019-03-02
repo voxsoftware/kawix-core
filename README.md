@@ -244,7 +244,7 @@ var __kawi_async= async function(){
 	})
 	await KModule.import('./other.js', {
 		// this ensure create a cache for be usable later with import
-		uid: 'cached_result_on_1' 
+		uid: 'cached_result_on_2' 
 	})
 }
 ``` 
