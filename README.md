@@ -22,31 +22,6 @@
 > node_modules/.bin/kwcore "https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js"
 ``` 
 
-**Option 3**. Create a *test.js* file
-
-```bash
-> npm install @kawix/core@latest
-``` 
-
-```javascript
-var Kawi= require("@kawix/core") 
-var KModule= Kawi.KModule
-
-// enable KModule import using `import` syntax
-KModule.injectImport()
-
-// this will be async 
-KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js")
-
-// or if you want force ignore cache and always download before import
-/*
-KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js", {
-	"force": true
-})
-*/
-
-``` 
-
 
 If you run the previous example, you will see and HTTP server example running.
 Look the https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js content
@@ -88,7 +63,16 @@ import test from './test.js'
 
 ## Features 
 
-All this examples can be imported with KModule, like *Get Started* example
+You can run the following examples using **kwcore** executable include in npm module. If you want run programatically you need include a file like this and execute with node.js 
+
+```javascript 
+var Kawix= require("@kawix/core") 
+// enable KModule import using `import` syntax
+Kawix.KModule.injectImport()
+// Kawix.KModule.import returns a promise
+Kawix.KModule.import("https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js")
+```
+
 
 
 ### 1. Imports are async, imports from URL
