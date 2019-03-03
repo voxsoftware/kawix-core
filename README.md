@@ -90,87 +90,8 @@ import test from './test.js'
 
 All this examples can be imported with KModule, like *Get Started* example
 
-### 1. Full Ecmascript 2017 (async/await)
 
-Create an .es6 or .js with following content and import with KModule
-
-```javascript 
-
-let value1= 7 ** 2
-let arr= [10,23,4,NaN]
-
-console.log(value1)
-console.log(arr.includes(4))
-
-let cars= {
-	"BMW": 3,
-	"Tesla": 2,
-	"Toyota": 1
-}
-let values= Object.values(cars)
-console.log(values)
-
-
-for(let [key,value] of Object.entries(cars)){
-	console.log(`key: ${key} value: ${value}`)
-}
-
-
-printInfo(1)
-
-
-function getUser(userId){
-	return new Promise((resolve)=>{
-		setTimeout(resolve.bind(null, 'John'), 1000)
-	})
-}
-
-async function printInfo(userId){
-	let user= await getUser(userId)
-	console.log(user)
-}
-
-```
-
-
-### 2. Typescript support out of the box 
-
-Create an .ts with following content and import with KModule
-
-```typescript
-function greeter(person: string) {
-	return "Hello, " + person;
-}
-
-
-function sleep(timeout?: number){
-	timeout= timeout || 0
-	return new Promise(function(resolve, reject){
-		setTimeout(resolve, timeout)
-	})
-}
-
-
-async function foo() {
-    try {
-        var val = greeter("World!");
-		console.log(val);
-		
-		console.log("Simulating async action... please wait 1 second")
-		await sleep(1000)
-		console.log("Finished")
-
-    }
-    catch(err) {
-        console.log('Error: ', err.message);
-    }
-}
-
-foo()
-```
-
-
-### 3. Imports are async, imports from URL
+### 1. Imports are async, imports from URL
 
 Create an .es6 or .js with following content and import with KModule
 
@@ -249,6 +170,85 @@ var __kawi_async= async function(){
 }
 ``` 
 
+### 2. Full Ecmascript 2017 (async/await)
+
+Create an .es6 or .js with following content and import with KModule
+
+```javascript 
+
+let value1= 7 ** 2
+let arr= [10,23,4,NaN]
+
+console.log(value1)
+console.log(arr.includes(4))
+
+let cars= {
+	"BMW": 3,
+	"Tesla": 2,
+	"Toyota": 1
+}
+let values= Object.values(cars)
+console.log(values)
+
+
+for(let [key,value] of Object.entries(cars)){
+	console.log(`key: ${key} value: ${value}`)
+}
+
+
+printInfo(1)
+
+
+function getUser(userId){
+	return new Promise((resolve)=>{
+		setTimeout(resolve.bind(null, 'John'), 1000)
+	})
+}
+
+async function printInfo(userId){
+	let user= await getUser(userId)
+	console.log(user)
+}
+
+```
+
+
+### 3. Typescript support out of the box 
+
+Create an .ts with following content and import with KModule
+
+```typescript
+function greeter(person: string) {
+	return "Hello, " + person;
+}
+
+
+function sleep(timeout?: number){
+	timeout= timeout || 0
+	return new Promise(function(resolve, reject){
+		setTimeout(resolve, timeout)
+	})
+}
+
+
+async function foo() {
+    try {
+        var val = greeter("World!");
+		console.log(val);
+		
+		console.log("Simulating async action... please wait 1 second")
+		await sleep(1000)
+		console.log("Finished")
+
+    }
+    catch(err) {
+        console.log('Error: ', err.message);
+    }
+}
+
+foo()
+```
+
 
 ### 4. Imports npm packages (dinamycally)
 
@@ -281,33 +281,133 @@ Test yourself from your terminal
 ```
 
 **Use cases for dynamic loading?**
-1. When you need/want decrease or have zero *installation/update* effort (for example in a web service balanced on multiple servers)
+* You need/want decrease or have zero *installation/update* effort (for example in a web service balanced on multiple servers)
 
-2. When you are testing development 
+* You are testing development 
 
-3. When you sell scripts to your clients *no developers* that have not idea how move mouse :v 
+* You sell scripts to your clients *no developers* that have not idea how move mouse :v 
 
-4. When you want decreases memory, and you want multiple secure apps sharing process/cluster
+* You want decreases memory, and you want multiple secure apps sharing process/cluster
 
-5. When you want portability 
+* You want portability 
 
-6. For little tools that you can make for your projects
+* For little tools that you can make for your projects
 
-7. For fun :) 
+* For fun :) 
 
 **When not use dynamic loading?**
 
-1. Just now, only with native bindings module, because currently **@kawix/core** doesn't have ability to compile. But will be available using *npm* package for this purpose
+* Just now, only with native bindings module, because currently **@kawix/core** doesn't have ability to compile. But will be available using *npm* package for this purpose
 
 **Is secure hot loading?**
 
 Maybe you think that this is not good or practical, because can give version inconsistency. Ok, that's not true, because each module version is respected. 
 
-1. This means if you require module *A* that depends on *B* version 1 and on module *C*, that depends on *B* version 2, each version will be downloaded, and each module will use the version for which was made
+* This means if you require module *A* that depends on *B* version 1 and on module *C*, that depends on *B* version 2, each version will be downloaded, and each module will use the version for which was made
 
-2. If you require module *A* version 1, and later in same process require module *A* version 2, each module version will be cached in different folder, avoiding file inconsistency cross versions
+* If you require module *A* version 1, and later in same process require module *A* version 2, each module version will be cached in different folder, avoiding file inconsistency cross versions
 
-3. If you require module *A* that depends on module *B* version 1, and later in your code you require module *B* version 1, will be resolved to the same module *B* path, installed for *A*, avoiding so much duplicates, but if you request a different version, will be downloaded and cached on different folder
+* If you require module *A* that depends on module *B* version 1, and later in your code you require module *B* version 1, will be resolved to the same module *B* path, installed for *A*, avoiding so much duplicates, but if you request a different version, will be downloaded and cached on different folder
+
+
+### 5. Register language loaders 
+
+**@kawix/core** allows register additional language loaders. For example, you can easily start to write *coffeescript* importing the loader available in github. Just see the example:
+
+Create a *test.js* file
+
+```javascript
+import CoffeeScript from 'https://raw.githubusercontent.com/voxsoftware/kawix-std/master/coffeescript/register.js'
+
+// You can now import .coffee files 
+import {start} from 'https://raw.githubusercontent.com/voxsoftware/kawix-std/master/coffeescript/example.coffee'
+
+start() 
+```
+
+Run with **@kawix/core**
+
+```bash
+> kwcore ./test.js
+```
+
+There is available a loader also for *cson* at [https://raw.githubusercontent.com/voxsoftware/kawix-std/master/coffeescript/cson/register.js](https://raw.githubusercontent.com/voxsoftware/kawix-std/master/coffeescript/cson/register.js)
+
+This is only an example you can create your own loaders 
+
+
+### 6. Generate a **single file bundle** from a **npm package**
+
+Yes, in some cases you may prefer have a single .js file instead of loading an entire npm package with a ton of modules. Consider this practical example
+
+* Create a *bundler.js* file
+
+```javascript
+import Bundler from 'https://raw.githubusercontent.com/voxsoftware/kawix-std/master/package/bundle.js'
+import Registry from 'https://raw.githubusercontent.com/voxsoftware/kawix-std/master/package/registry.js'
+import Path from 'path'
+
+init()
+async function init(){
+	// caching a npm package: express 4.16.4
+	var reg= new Registry()
+	var moduleinfo= await reg.resolve("express@^4.16.4")
+	var path= moduleinfo.folder 
+	
+    
+	var outfile= Path.join(__dirname, "express.js")
+
+	var bundler= new Bundler(path)
+	// packageJsonSupport should be true for npm packages
+	bundler.packageJsonSupport= true 
+	bundler.virtualName= `express`
+	await bundler.writeToFile(outfile).bundle()
+}
+```
+
+* Execute with **@kawix/core**, will generate an *express.js* file containing all the package. 
+
+```bash
+> kwcore ./bundler.js
+```
+
+* Now you can import from other files. Create a *server.js* file: 
+
+```javascript 
+import express from './express.js'
+var app = express() 
+app.get('/', function (req, res) {
+  res.send('Hello World')
+}) 
+app.listen(3000)
+console.log("Listening on 3000")
+// go to browser and open 127.0.0.1:3000
+```
+
+* Now execute the *server.js* file and go to browser: 127.0.0.1:3000
+
+```bash
+> kwcore ./server.js
+  Listening on 3000
+
+```
+
+
+
+**Why generate a single file package?**
+
+* Faster installation times when you distribute scripts or packages
+
+* You want generate a distributable file from your package
+
+* You want create packages with zero or almost zero dependencies 
+
+* You want avoid module version collision
+
+* Use in browser (coming soon)
+
+* If you are like me, that hates that one simple module downloads a tons of dependencies :v 
+
 
 
 ## Do you want contribute? 
