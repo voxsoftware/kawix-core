@@ -591,7 +591,7 @@ var changeSource= function(source){
 	var lines= source.split(/\r\n|\r|\n/g)
 	var line 
 	var maybeRequire= []
-	var reg= /= (_interopRequire.*\()?require\((.*)\)\)?/
+	var reg= /\=?\s?(_interopRequire.*\()?require\((.*)\)\)?/
 	var esm = false , req, required=[]
 
 	for(var i=0;i<lines.length;i++){
