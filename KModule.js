@@ -583,7 +583,101 @@ exports.injectImport= Mod.injectImport= function(){
 
 
 Mod.__num= 0
+
 var changeSource= function(source){
+	// this method works with transpiled code
+	// that is known the generated style, can determine the modules imported with `import`
+
+	var lines= source.split(/\r\n|\r|\n/g)
+	var line 
+	var maybeRequire= []
+	var reg= /= (_interopRequire.*\()?require\((.*)\)\)?/
+	var esm = false , req, required=[]
+
+	for(var i=0;i<lines.length;i++){
+		line= lines[i]
+		if(reg.test(line)){
+			maybeRequire.push({
+				line: line,
+				index: i
+			})
+		}
+		else if(line.startsWith("function _interopRequire")){
+			// good, is a ESM module
+			esm= true 
+			break 
+		}
+	}
+	
+	var num,json,code 
+	num= Mod.__num++
+
+	if(esm){
+		for(var i=0;i<maybeRequire.length;i++){
+			req= maybeRequire[i]
+			
+			mod= null
+			req.line= req.line.replace(reg,function(a,_, c){
+				var b= c
+				if(c.endsWith(")"))
+					c= c.substring(0,c.length-1)
+				c= c.substring(1, c.length-1)
+				mod= c
+				return a.replace(b, b.replace(c, "___kawi__internal__"  + num + "MOD_" + c + "_" + i))
+			})
+			
+
+			if(mod){				
+				if(builtinModules.indexOf(mod) < 0){
+					required.push(mod)
+					lines[req.index]= req.line
+				}
+			}
+		}
+
+	}
+
+	
+	if(required.length){
+
+		source= lines.join("\n")
+
+		// create a preloader function
+		json= JSON.stringify(required)
+		code= "function(KModule){\n"
+		
+		code+= "	var resolve, reject\n"
+		code+= "	var required= " + json + "\n"
+		code+= "	var num=" + num +"\n"
+		code+= "	var i=-1\n"
+		code+= "	var __load= " + (function(){
+			i++
+			var mod= required[i]
+			if(!mod) return resolve()
+			
+
+			var unq = "___kawi__internal__"  + num + "MOD_" + mod + "_" + i
+			var promise= KModule.import(mod, {
+				uid: unq
+			})
+			promise.then(__load).catch(reject)
+		}).toString() + "\n"
+		code+= "	var promise= new Promise(function(a,b){ resolve=a; reject=b; })\n"
+		code+= "	__load()\n"
+		code+= "	return promise\n"
+		code+= "}"
+	}
+
+	var imports={}
+	imports.mods= required 
+	imports.inject= code 
+	imports.source= source  + (code ? ("\nvar ___kawi__async = " + code) : "")
+	return imports
+
+}
+
+// this method is not good 
+var __bad__changeSource= function(source){
 	var reg = /import\s+.+\s+from\s+(\"|\')(.+)(\"|\')(\;|\r|\n)/g	
 	var num= Mod.__num++
 
@@ -631,6 +725,7 @@ var changeSource= function(source){
 }
 
 
+
 var asynchelper = "function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }\n\nfunction _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"next\", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, \"throw\", err); } _next(undefined); }); }; }"
 var loadInjectImportFunc= function(ast){
 
@@ -645,12 +740,17 @@ var loadInjectImportFunc= function(ast){
 			ast.injectCode= injectCode.trim()
 			i= ast.injectCode.indexOf("function")
 			ast.injectCode= ast.injectCode.substring(i)
-		}
+		}		
 	}
 
 	if(ast.injectCode && !ast.inject){		
-		ucode= "(function(){" + asynchelper + "\n\nreturn " + ast.injectCode + ";\n})()"		
-		ast.inject= eval(ucode)
+		if(ast.injectCode.indexOf("regeneratorRuntime") >= 0){
+			ucode= "(function(){" + asynchelper + "\n\nreturn " + ast.injectCode + ";\n})()"		
+			ast.inject= eval(ucode)
+		}else{
+			ucode= "(" + ast.injectCode + ")"
+			ast.inject= eval(ucode)
+		}
 	}
 
 }
@@ -1215,11 +1315,15 @@ exports.compile= Mod.compile= function(file, options){
 						options.transpile= false
 					}
 
+					/* 
+					// THIS WAS NOT GOOD. THIS CAN EXPONE TO UNEXPECTED RESULTS
+					// JUST NOW VERIFICATION OF IMPORTS WILL BE MADE AFTER TRANSPILES
+
 					if (options.injectImport && (options.transpile !== false)){
 						imports= changeSource(value)	
 						value= imports.source 
 					}
-
+					*/
 
 					if(json && json.transpilerOptions){
 						transpilerOptions = json.transpilerOptions
@@ -1239,8 +1343,13 @@ exports.compile= Mod.compile= function(file, options){
 
 					if(options.transpile !== false){
 						json= Next.transpile(value, transpilerOptions)
+						
 						delete json.options
 						if(options.injectImport){					
+							// new way to analyze imports
+							imports= changeSource(json.code)
+							json.code= imports.source 
+							json.injectCode= imports.inject 
 							loadInjectImportFunc(json)
 						}
 					}
