@@ -110,7 +110,7 @@ handle()
 Think in this code: 
 
 ```javascript 
-// is native method, is untouched
+// is builtin module, this line is untouched
 import fs from 'fs' 
 // is processed by kawix
 import http from 'https://raw.githubusercontent.com/voxsoftware/kawi-core/master/example/http.js' 
