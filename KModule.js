@@ -1356,7 +1356,7 @@ exports.compile= Mod.compile= function(file, options){
 
 				}
 
-				str= JSON.stringify(json)
+				str= JSON.stringify(json,null,'\t')
 				action= "writecache"
 				fs.writeFile(cached2, str, f)
 
